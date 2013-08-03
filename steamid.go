@@ -27,6 +27,7 @@ func FromValues(universe uint8, accountInstance uint32, accountType *AccountType
 	return id
 }
 
+// Holds the SteamID information. See https://developer.valvesoftware.com/wiki/SteamID#As_Represented_in_Computer_Programs for implementation details.
 type SteamID uint64
 
 func (id SteamID) getBits(offset uint16, mask uint64) uint64 {
