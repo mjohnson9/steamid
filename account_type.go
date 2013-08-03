@@ -1,5 +1,6 @@
 package steamid
 
+// The struct that holds account type information
 type AccountType struct {
 	Number uint8
 	Name   string
@@ -7,6 +8,7 @@ type AccountType struct {
 	Modifier uint64
 }
 
+// A list of account types. See https://developer.valvesoftware.com/wiki/SteamID#Types_of_Steam_Accounts for more information.
 var AccountTypes = [...]*AccountType{
 	&AccountType{
 		Number: 0,
