@@ -18,6 +18,9 @@ func FromString(steamID string) (SteamID, error) {
 	if steamID == "STEAM_ID_PENDING" {
 		return FromValues(UniverseUnspecified, 0, AccountTypes[5], 0), nil
 	}
+	if steamID == "UNKNOWN" {
+		return FromValues(UniverseUnspecified, 0, AccountTypes[0], 0), nil
+	}
 
 	if strings.HasPrefix(steamID, "STEAM_") {
 		return FromSteamID2(steamID)
