@@ -15,6 +15,7 @@ var invalidSteamID = FromValues(UniverseUnspecified, 0, AccountTypes[0], 0)
 
 // Attempts to automatically parse a SteamID from a string using various methods
 func FromString(steamID string) (SteamID, error) {
+	steamID = strings.ToUpper(steamID)
 	if steamID == "STEAM_ID_PENDING" {
 		return FromValues(UniverseUnspecified, 0, AccountTypes[5], 0), nil
 	}
