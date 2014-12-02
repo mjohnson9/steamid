@@ -145,20 +145,6 @@ func (id SteamID) SteamID3() string {
 	return "Unknown type"
 }
 
-// URL returns a URL pointing to this SteamID's location on the web.
-func (id SteamID) URL() string {
-	switch id.accountTypeNumber() {
-	case 1:
-		accountID := id.AccountID()
-		return "https://steamcommunity.com/profiles/[U:1:" + strconv.FormatUint(uint64((accountID>>1)*2+accountID&1), 10) + "]"
-	case 7:
-		accountID := id.AccountID()
-		return "https://steamcommunity.com/gid/[g:1:" + strconv.FormatUint(uint64((accountID>>1)*2+accountID&1), 10) + "]"
-	default:
-		return ""
-	}
-}
-
 // An alias of SteamID3
 func (id SteamID) String() string {
 	return id.SteamID3()
