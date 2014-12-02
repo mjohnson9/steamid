@@ -9,32 +9,36 @@ import (
 
 var steamID2Regex = regexp.MustCompile("^STEAM_(\\d+):(\\d+):(\\d+)$")
 
-var InvalidSteamIDError = errors.New("Invalid SteamID")
+// ErrInvalidSteamID is returned when an attempt is made to parse an invalid
+// SteamID.
+var ErrInvalidSteamID = errors.New("invalid SteamID")
 
-var invalidSteamID = FromValues(UniverseUnspecified, 0, AccountTypes[0], 0)
+var invalidSteamID = FromValues(UniverseUnspecified, 0, 0, 0)
 
-// Attempts to automatically parse a SteamID from a string using various methods
+// FromString attempts to parse a SteamID from a string. If it fails, it will
+// return an invalid SteamID and ErrInvalidSteamID.
 func FromString(steamID string) (SteamID, error) {
 	steamID = strings.ToUpper(steamID)
 	if steamID == "STEAM_ID_PENDING" {
-		return FromValues(UniverseUnspecified, 0, AccountTypes[5], 0), nil
+		return FromValues(UniverseUnspecified, 0, 5, 0), nil
 	}
 	if steamID == "UNKNOWN" {
-		return FromValues(UniverseUnspecified, 0, AccountTypes[0], 0), nil
+		return FromValues(UniverseUnspecified, 0, 0, 0), nil
 	}
 
 	if strings.HasPrefix(steamID, "STEAM_") {
 		return FromSteamID2(steamID)
 	}
 
-	return invalidSteamID, InvalidSteamIDError
+	return invalidSteamID, ErrInvalidSteamID
 }
 
-// Attempts to parse a SteamID from a verison 2 textual repesentation (i.e.: STEAM_0:0:11101)
+// FromSteamID2 attempts to parse a SteamID from the version 2 textual
+// representation. For example, STEAM_0:0:1.
 func FromSteamID2(steamID string) (SteamID, error) {
 	matches := steamID2Regex.FindStringSubmatch(steamID)
 	if len(matches) < 4 {
-		return invalidSteamID, InvalidSteamIDError
+		return invalidSteamID, ErrInvalidSteamID
 	}
 
 	var err error
@@ -57,5 +61,5 @@ func FromSteamID2(steamID string) (SteamID, error) {
 	}
 	accountID := uint32(accountID64)
 
-	return FromValues(universe, 1, AccountTypes[1], (accountID<<1)|uint32(authServer)), nil
+	return FromValues(universe, 1, 1, (accountID<<1)|uint32(authServer)), nil
 }
