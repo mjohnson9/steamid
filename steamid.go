@@ -104,27 +104,27 @@ func (id SteamID) SteamID2() string {
 // example, [U:1:2].
 func (id SteamID) SteamID3() string {
 	switch id.accountTypeNumber() {
-	case 0: // Invalid
+	case AccountTypeInvalid:
 		return "[I:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + "]"
-	case 1: // Individual
+	case AccountTypeIndividual:
 		if accountInstance := id.AccountInstance(); accountInstance != 1 {
 			// Not a desktop instance
 			return "[U:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + ":" + strconv.FormatUint(uint64(accountInstance), 10) + "]"
 		}
 		return "[U:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + "]"
-	case 2: // Multiseat
+	case AccountTypeMultiseat:
 		return "[M:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + ":" + strconv.FormatUint(uint64(id.AccountInstance()), 10) + "]"
-	case 3: // GameServer
+	case AccountTypeGameServer:
 		return "[G:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + "]"
-	case 4: // AnonGameServer
+	case AccountTypeAnonGameServer:
 		return "[A:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + ":" + strconv.FormatUint(uint64(id.AccountInstance()), 10) + "]"
-	case 5: // Pending
+	case AccountTypePending:
 		return "[P:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + "]"
-	case 6: // ContentServer
+	case AccountTypeContentServer:
 		return "[C:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + "]"
-	case 7: // Clan
+	case AccountTypeClan:
 		return "[g:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + "]"
-	case 8: // Chat
+	case AccountTypeChat:
 		const instanceMask = 0x000FFFFF
 
 		const (

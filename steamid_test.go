@@ -14,8 +14,8 @@ var steamIDTests = []struct {
 	ExpectedID2 string
 	ExpectedID3 string
 }{
-	{0, 1, 1, 2, "STEAM_0:0:1", "[U:0:2]"},
-	{1, 1, 1, 35812865, "STEAM_0:1:17906432", "[U:1:35812865]"},
+	{steamid.UniverseUnspecified, 1, steamid.AccountTypeIndividual, 2, "STEAM_0:0:1", "[U:0:2]"},
+	{steamid.UniversePublic, 1, steamid.AccountTypeIndividual, 35812865, "STEAM_0:1:17906432", "[U:1:35812865]"},
 }
 
 func TestSteamID(t *testing.T) {
