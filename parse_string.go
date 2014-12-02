@@ -21,8 +21,7 @@ func FromString(steamID string) (SteamID, error) {
 	steamID = strings.ToUpper(steamID)
 	if steamID == "STEAM_ID_PENDING" {
 		return FromValues(UniverseUnspecified, 0, 5, 0), nil
-	}
-	if steamID == "UNKNOWN" {
+	} else if steamID == "UNKNOWN" {
 		return FromValues(UniverseUnspecified, 0, 0, 0), nil
 	}
 
