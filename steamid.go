@@ -15,15 +15,10 @@ func FromCommunityID(id uint64, accountType *AccountType) SteamID {
 // Create a SteamID from a set of values
 func FromValues(universe uint8, accountInstance uint32, accountType *AccountType, accountID uint32) SteamID {
 	var id SteamID
-
 	id.setBits(0, 1<<32-1, uint64(accountID))
-
 	id.setBits(32, 1<<20-1, uint64(accountInstance))
-
 	id.setBits(32+20, 1<<4-1, uint64(accountType.Number))
-
 	id.setBits(32+20+4, 1<<8-1, uint64(universe))
-
 	return id
 }
 
