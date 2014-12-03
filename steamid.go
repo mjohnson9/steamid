@@ -154,9 +154,17 @@ func (id SteamID) SteamID3() string {
 	return ""
 }
 
-// An alias of SteamID3
+// String is an alias of SteamID3
 func (id SteamID) String() string {
-	return id.SteamID3()
+	if version2 := id.SteamID2(); len(version2) > 0 {
+		return version2
+	}
+
+	if version3 := id.SteamID3(); len(version3) > 0 {
+		return version3
+	}
+
+	return strconv.FormatInt(int64(id), 10)
 }
 
 // Implementation of encoding.TextMarshaler & encoding.TextUnmarshaler
