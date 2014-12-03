@@ -5,6 +5,7 @@
 package steamid
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -86,22 +87,30 @@ func (id SteamID) AccountType() (int, string) {
 
 // SteamID2 returns the version 2 textual representation of this SteamID. For
 // example, STEAM_0:0:1.
+//
+// When a SteamID type can not be turned into a version 2 ID, it returns an
+// empty string.
 func (id SteamID) SteamID2() string {
-	if accTypeNum := id.accountTypeNumber(); accTypeNum == 1 {
+	if accTypeNum := id.accountTypeNumber(); accTypeNum == AccountTypeInvalid {
+		return "UNKNOWN"
+	} else if accTypeNum == AccountTypeIndividual {
 		accountID := id.AccountID()
 		if universe := id.Universe(); universe > UniversePublic {
 			return "STEAM_" + strconv.FormatInt(int64(id.Universe()), 10) + ":" + strconv.FormatInt(int64(accountID&1), 10) + ":" + strconv.FormatInt(int64(accountID>>1), 10)
 		}
 		return "STEAM_0:" + strconv.FormatInt(int64(accountID&1), 10) + ":" + strconv.FormatInt(int64(accountID>>1), 10)
-	} else if accTypeNum == 5 {
+	} else if accTypeNum == AccountTypePending {
 		return "STEAM_ID_PENDING"
-	} else {
-		return "INVALID"
 	}
+
+	return ""
 }
 
 // SteamID3 returns the version 3 textual representation of this SteamID. For
 // example, [U:1:2].
+//
+// When a SteamID type can not be turned into a version 3 ID, it returns an
+// empty string.
 func (id SteamID) SteamID3() string {
 	switch id.accountTypeNumber() {
 	case AccountTypeInvalid:
@@ -142,10 +151,31 @@ func (id SteamID) SteamID3() string {
 		}
 	}
 
-	return "Unknown type"
+	return ""
 }
 
 // An alias of SteamID3
 func (id SteamID) String() string {
 	return id.SteamID3()
+}
+
+// Implementation of encoding.TextMarshaler & encoding.TextUnmarshaler
+
+// MarshalText implements encoding.TextMarshaler
+func (id SteamID) MarshalText() (text []byte, err error) {
+	if version2 := id.SteamID2(); len(version2) > 0 {
+		return []byte(version2), nil
+	}
+
+	if version3 := id.SteamID3(); len(version3) > 0 {
+		return []byte(version3), nil
+	}
+
+	return nil, fmt.Errorf("Cannot marshal account of type %d", id.accountTypeNumber())
+}
+
+// UnmarshalText implements encoding.TextMarshaler
+func (id *SteamID) UnmarshalText(text []byte) (err error) {
+	*id, err = FromString(string(text))
+	return
 }

@@ -2,12 +2,9 @@ package steamid
 
 import (
 	"errors"
-	"regexp"
 	"strconv"
 	"strings"
 )
-
-var steamID2Regex = regexp.MustCompile("^STEAM_(\\d+):(\\d+):(\\d+)$")
 
 // ErrInvalidSteamID is returned when an attempt is made to parse an invalid
 // SteamID.
@@ -18,15 +15,12 @@ var invalidSteamID = FromValues(UniverseUnspecified, 0, 0, 0)
 // FromString attempts to parse a SteamID from a string. If it fails, it will
 // return an invalid SteamID and ErrInvalidSteamID.
 func FromString(steamID string) (SteamID, error) {
-	steamID = strings.ToUpper(steamID)
-	if steamID == "STEAM_ID_PENDING" {
-		return FromValues(UniverseUnspecified, 0, 5, 0), nil
-	} else if steamID == "UNKNOWN" {
-		return FromValues(UniverseUnspecified, 0, 0, 0), nil
+	if steamIDUpper := strings.ToUpper(steamID); steamIDUpper == "UNKNOWN" || strings.HasPrefix(steamIDUpper, "STEAM_") {
+		return FromSteamID2(steamIDUpper)
 	}
 
-	if strings.HasPrefix(steamID, "STEAM_") {
-		return FromSteamID2(steamID)
+	if strings.HasPrefix(steamID, "[") && strings.HasSuffix(steamID, "]") {
+		return FromSteamID3(steamID)
 	}
 
 	return invalidSteamID, ErrInvalidSteamID
@@ -35,30 +29,129 @@ func FromString(steamID string) (SteamID, error) {
 // FromSteamID2 attempts to parse a SteamID from the version 2 textual
 // representation. For example, STEAM_0:0:1.
 func FromSteamID2(steamID string) (SteamID, error) {
-	matches := steamID2Regex.FindStringSubmatch(steamID)
-	if len(matches) < 4 {
+	steamID = strings.ToUpper(steamID)
+
+	if steamID == "STEAM_ID_PENDING" {
+		return FromValues(UniverseUnspecified, 0, 5, 0), nil
+	} else if steamID == "UNKNOWN" {
+		return FromValues(UniverseUnspecified, 0, 0, 0), nil
+	}
+
+	if !strings.HasPrefix(steamID, "STEAM_") {
+		return invalidSteamID, ErrInvalidSteamID
+	}
+	steamID = steamID[6:]
+
+	split := strings.Split(steamID, ":")
+	if len(split) != 3 {
 		return invalidSteamID, ErrInvalidSteamID
 	}
 
-	var err error
-
-	universe64, err := strconv.ParseInt(matches[1], 10, 8)
+	universe, err := strconv.ParseInt(split[0], 10, 8)
 	if err != nil {
 		return invalidSteamID, err
 	}
-	universe := uint8(universe64)
 
-	authServer64, err := strconv.ParseUint(matches[2], 10, 2)
+	authServer, err := strconv.ParseUint(split[1], 10, 1)
 	if err != nil {
 		return invalidSteamID, err
 	}
-	authServer := uint8(authServer64)
 
-	accountID64, err := strconv.ParseUint(matches[3], 10, 31)
+	accountID, err := strconv.ParseUint(split[2], 10, 31)
 	if err != nil {
 		return invalidSteamID, err
 	}
-	accountID := uint32(accountID64)
 
-	return FromValues(universe, 1, 1, (accountID<<1)|uint32(authServer)), nil
+	return FromValues(uint8(universe), 1, 1, (uint32(accountID)<<1)|uint32(authServer)), nil
+}
+
+// FromSteamID3 attempts to parse a SteamID from the version 3 textual
+// representation. For example, [U:0:2].
+func FromSteamID3(steamID string) (SteamID, error) {
+	steamID = strings.TrimPrefix(steamID, "[")
+	steamID = strings.TrimSuffix(steamID, "]")
+
+	split := strings.Split(steamID, ":")
+	if len(split) < 3 || len(split) > 4 {
+		return invalidSteamID, ErrInvalidSteamID
+	}
+
+	idType := split[0]
+	if idType != "U" && len(split) != 3 {
+		return invalidSteamID, ErrInvalidSteamID
+	}
+
+	universe, err := strconv.ParseInt(split[1], 10, 8)
+	if err != nil {
+		return invalidSteamID, err
+	}
+
+	accountID, err := strconv.ParseInt(split[2], 10, 32)
+	if err != nil {
+		return invalidSteamID, err
+	}
+
+	accountTypeNum := uint8(255)
+
+	switch idType {
+	case "I":
+		accountTypeNum = AccountTypeInvalid
+
+	case "U":
+		if len(split) == 4 {
+			accountInstance, err := strconv.ParseInt(split[3], 10, 20)
+			if err != nil {
+				return invalidSteamID, err
+			}
+
+			return FromValues(uint8(universe), uint32(accountInstance), AccountTypeIndividual, uint32(accountID)), nil
+		}
+		return FromValues(uint8(universe), 1, AccountTypeIndividual, uint32(accountID)), nil
+
+	case "M":
+		accountTypeNum = AccountTypeMultiseat
+
+	case "G":
+		accountTypeNum = AccountTypeGameServer
+
+	case "A":
+		accountTypeNum = AccountTypeAnonGameServer
+
+	case "P":
+		accountTypeNum = AccountTypePending
+
+	case "C":
+		accountTypeNum = AccountTypeContentServer
+
+	case "g":
+		accountTypeNum = AccountTypeClan
+
+	case "c", "L", "T":
+		var accountInstance uint32
+
+		const (
+			instanceMask         = 0x000FFFFF
+			clanFlag             = (instanceMask + 1) >> 1
+			lobbyFlag            = (instanceMask + 1) >> 2
+			matchmakingLobbyFlag = (instanceMask + 1) >> 3
+		)
+
+		switch idType {
+		case "c":
+			accountInstance = clanFlag
+		case "L":
+			accountInstance = lobbyFlag
+		case "T":
+			accountInstance = matchmakingLobbyFlag
+		default:
+			return invalidSteamID, ErrInvalidSteamID
+		}
+
+		return FromValues(uint8(universe), accountInstance, AccountTypeChat, uint32(accountID)), nil
+	}
+
+	if accountTypeNum == 255 {
+		return invalidSteamID, ErrInvalidSteamID
+	}
+	return FromValues(uint8(universe), 0, accountTypeNum, uint32(accountID)), nil
 }
