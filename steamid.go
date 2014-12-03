@@ -157,7 +157,7 @@ func (id SteamID) SteamID3() string {
 // String returns a string representation of this SteamID. It attempts to use a
 // version 2 SteamID first, then a version 3 SteamID, and finally the raw
 // representation of this SteamID. The last of those can not be parsed by
-// FromString.
+// Parse.
 func (id SteamID) String() string {
 	if version2 := id.SteamID2(); len(version2) > 0 {
 		return version2
@@ -187,6 +187,6 @@ func (id SteamID) MarshalText() (text []byte, err error) {
 
 // UnmarshalText implements encoding.TextUnmarshaler
 func (id *SteamID) UnmarshalText(text []byte) (err error) {
-	*id, err = FromString(string(text))
+	*id, err = Parse(string(text))
 	return
 }

@@ -45,23 +45,23 @@ func TestSteamID(t *testing.T) {
 
 func TestParseID(t *testing.T) {
 	for _, details := range steamIDTests {
-		_, err := steamid.FromString(details.ExpectedID3)
+		_, err := steamid.Parse(details.ExpectedID3)
 		if err != nil {
-			t.Errorf("FromString(%q): error parsing: %s", details.ExpectedID3, err)
+			t.Errorf("Parse(%q): error parsing: %s", details.ExpectedID3, err)
 		}
 
-		_, err = steamid.FromString(details.ExpectedID2)
+		_, err = steamid.Parse(details.ExpectedID2)
 		if err != nil {
-			t.Errorf("FromString(%q): error parsing: %s", details.ExpectedID2, err)
+			t.Errorf("Parse(%q): error parsing: %s", details.ExpectedID2, err)
 		}
 	}
 }
 
 func TestParseID2(t *testing.T) {
 	for _, details := range steamIDTests {
-		steamID, err := steamid.FromSteamID2(details.ExpectedID2)
+		steamID, err := steamid.ParseV2(details.ExpectedID2)
 		if err != nil {
-			t.Errorf("FromSteamID2(%q): error parsing: %s", details.ExpectedID2, err)
+			t.Errorf("ParseV2(%q): error parsing: %s", details.ExpectedID2, err)
 			continue
 		}
 
@@ -88,9 +88,9 @@ func TestParseID2(t *testing.T) {
 
 func TestParseID3(t *testing.T) {
 	for _, details := range steamIDTests {
-		steamID, err := steamid.FromSteamID3(details.ExpectedID3)
+		steamID, err := steamid.ParseV3(details.ExpectedID3)
 		if err != nil {
-			t.Errorf("FromSteamID3(%q): error parsing: %s", details.ExpectedID3, err)
+			t.Errorf("ParseV3(%q): error parsing: %s", details.ExpectedID3, err)
 			continue
 		}
 
@@ -116,7 +116,7 @@ func BenchmarkParseID2(b *testing.B) {
 	const testID = "STEAM_0:0:1"
 
 	for i := 0; i < b.N; i++ {
-		if _, err := steamid.FromSteamID2(testID); err != nil {
+		if _, err := steamid.ParseV2(testID); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -126,7 +126,7 @@ func BenchmarkParseID3(b *testing.B) {
 	const testID = "[U:0:2]"
 
 	for i := 0; i < b.N; i++ {
-		if _, err := steamid.FromSteamID3(testID); err != nil {
+		if _, err := steamid.ParseV3(testID); err != nil {
 			b.Fatal(err)
 		}
 	}

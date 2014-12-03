@@ -12,23 +12,24 @@ var ErrInvalidSteamID = errors.New("invalid SteamID")
 
 var invalidSteamID = FromValues(UniverseUnspecified, 0, 0, 0)
 
-// FromString attempts to parse a SteamID from a string. If it fails, it will
-// return an invalid SteamID and ErrInvalidSteamID.
-func FromString(steamID string) (SteamID, error) {
+// Parse attempts to parse a SteamID from a string via automatic detection of
+// the string's format. If it fails, it will return an invalid SteamID and
+// ErrInvalidSteamID.
+func Parse(steamID string) (SteamID, error) {
 	if steamIDUpper := strings.ToUpper(steamID); steamIDUpper == "UNKNOWN" || strings.HasPrefix(steamIDUpper, "STEAM_") {
-		return FromSteamID2(steamIDUpper)
+		return ParseV2(steamIDUpper)
 	}
 
 	if strings.HasPrefix(steamID, "[") && strings.HasSuffix(steamID, "]") {
-		return FromSteamID3(steamID)
+		return ParseV3(steamID)
 	}
 
 	return invalidSteamID, ErrInvalidSteamID
 }
 
-// FromSteamID2 attempts to parse a SteamID from the version 2 textual
+// ParseV2 attempts to parse a SteamID from the version 2 textual
 // representation. For example, STEAM_0:0:1.
-func FromSteamID2(steamID string) (SteamID, error) {
+func ParseV2(steamID string) (SteamID, error) {
 	steamID = strings.ToUpper(steamID)
 
 	if steamID == "STEAM_ID_PENDING" {
@@ -65,9 +66,9 @@ func FromSteamID2(steamID string) (SteamID, error) {
 	return FromValues(uint8(universe), 1, 1, (uint32(accountID)<<1)|uint32(authServer)), nil
 }
 
-// FromSteamID3 attempts to parse a SteamID from the version 3 textual
+// ParseV3 attempts to parse a SteamID from the version 3 textual
 // representation. For example, [U:0:2].
-func FromSteamID3(steamID string) (SteamID, error) {
+func ParseV3(steamID string) (SteamID, error) {
 	steamID = strings.TrimPrefix(steamID, "[")
 	steamID = strings.TrimSuffix(steamID, "]")
 
