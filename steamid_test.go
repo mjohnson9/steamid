@@ -33,6 +33,13 @@ func TestSteamID(t *testing.T) {
 		if got3 != details.ExpectedID3 {
 			t.Errorf("SteamID3([Universe %d Instance %d Type %d ID %d]): got %q, expected %q", details.Universe, details.Instance, details.Type, details.ID, got3, details.ExpectedID3)
 		}
+
+		gotMarshal, err := steamID.MarshalText()
+		if err != nil {
+			t.Errorf("MarshalText([Universe %d Instance %d Type %d ID %d]): %s", details.Universe, details.Instance, details.Type, details.ID, err)
+		} else if string(gotMarshal) != details.ExpectedID2 && string(gotMarshal) != details.ExpectedID3 {
+			t.Errorf("MarshalText([Universe %d Instance %d Type %d ID %d]): got %q, expected %q or %q", details.Universe, details.Instance, details.Type, details.ID, string(gotMarshal), details.ExpectedID2, details.ExpectedID3)
+		}
 	}
 }
 
