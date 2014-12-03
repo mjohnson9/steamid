@@ -154,7 +154,10 @@ func (id SteamID) SteamID3() string {
 	return ""
 }
 
-// String is an alias of SteamID3
+// String returns a string representation of this SteamID. It attempts to use a
+// version 2 SteamID first, then a version 3 SteamID, and finally the raw
+// representation of this SteamID. The last of those can not be parsed by
+// FromString.
 func (id SteamID) String() string {
 	if version2 := id.SteamID2(); len(version2) > 0 {
 		return version2
