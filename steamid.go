@@ -182,7 +182,7 @@ func (id SteamID) MarshalText() (text []byte, err error) {
 	return nil, fmt.Errorf("Cannot marshal account of type %d", id.accountTypeNumber())
 }
 
-// UnmarshalText implements encoding.TextMarshaler
+// UnmarshalText implements encoding.TextUnmarshaler
 func (id *SteamID) UnmarshalText(text []byte) (err error) {
 	*id, err = FromString(string(text))
 	return
