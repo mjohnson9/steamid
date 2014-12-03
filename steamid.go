@@ -9,21 +9,6 @@ import (
 	"strconv"
 )
 
-// FromCommunityID creates a SteamID from a community ID.
-//
-// Note that this only works with AccountTypes that have modifiers. By default,
-// these are only 1 and 7.
-//
-// For more information about account types, see
-// https://developer.valvesoftware.com/wiki/SteamID#Types_of_Steam_Accounts
-func FromCommunityID(id uint64, accountType uint8) SteamID {
-	accType := accountTypes[accountType]
-	authServer := uint8(id % 2)
-	accountID := uint32((id - accType.Modifier - uint64(authServer)) / 2)
-
-	return FromValues(0, 1, accType.Number, (accountID<<1)|uint32(authServer))
-}
-
 // FromValues creates a SteamID from the given values.
 func FromValues(universe uint8, accountInstance uint32, accountType uint8, accountID uint32) SteamID {
 	var id SteamID
