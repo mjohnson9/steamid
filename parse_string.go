@@ -10,21 +10,25 @@ import (
 // SteamID.
 var ErrInvalidSteamID = errors.New("invalid SteamID")
 
-var invalidSteamID = FromValues(UniverseUnspecified, 0, 0, 0)
+var invalidSteamID = FromValues(UniverseUnspecified, 0, AccountTypeInvalid, 0)
 
-// ParseCommunityID creates a SteamID from a community ID.
+// ParseCommunityID creates a SteamID from a community ID and modifier.
 //
-// Note that this only works with AccountTypes that have modifiers. By default,
-// these are only 1 and 7.
+// The account type is a non-negative number. The only valid account types for
+// this function are AccountTypeIndividual and AccountTypeClan.
 //
-// For more information about account types, see
-// https://developer.valvesoftware.com/wiki/SteamID#Types_of_Steam_Accounts
-func ParseCommunityID(id uint64, accountType uint8) SteamID {
-	accType := accountTypes[accountType]
+// If an invalid account type is given, this function will return an invalid
+// SteamID.
+func ParseCommunityID(id uint64, accountType AccountType) SteamID {
+	modifier := accountType.Modifier()
+	if modifier == 0 {
+		return invalidSteamID
+	}
+
 	authServer := uint8(id % 2)
-	accountID := uint32((id - accType.Modifier - uint64(authServer)) / 2)
+	accountID := uint32((id - modifier - uint64(authServer)) / 2)
 
-	return FromValues(0, 1, accType.Number, (accountID<<1)|uint32(authServer))
+	return FromValues(0, 1, accountType, (accountID<<1)|uint32(authServer))
 }
 
 // Parse attempts to parse a SteamID from a string via automatic detection of
@@ -48,9 +52,9 @@ func ParseV2(steamID string) (SteamID, error) {
 	steamID = strings.ToUpper(steamID)
 
 	if steamID == "STEAM_ID_PENDING" {
-		return FromValues(UniverseUnspecified, 0, 5, 0), nil
+		return FromValues(UniverseUnspecified, 0, AccountTypePending, 0), nil
 	} else if steamID == "UNKNOWN" {
-		return FromValues(UniverseUnspecified, 0, 0, 0), nil
+		return FromValues(UniverseUnspecified, 0, AccountTypeInvalid, 0), nil
 	}
 
 	if !strings.HasPrefix(steamID, "STEAM_") {
@@ -107,11 +111,11 @@ func ParseV3(steamID string) (SteamID, error) {
 		return invalidSteamID, err
 	}
 
-	accountTypeNum := uint8(255)
+	var accountType AccountType = 255
 
 	switch idType {
 	case "I":
-		accountTypeNum = AccountTypeInvalid
+		accountType = AccountTypeInvalid
 
 	case "U":
 		if len(split) == 4 {
@@ -125,22 +129,22 @@ func ParseV3(steamID string) (SteamID, error) {
 		return FromValues(uint8(universe), 1, AccountTypeIndividual, uint32(accountID)), nil
 
 	case "M":
-		accountTypeNum = AccountTypeMultiseat
+		accountType = AccountTypeMultiseat
 
 	case "G":
-		accountTypeNum = AccountTypeGameServer
+		accountType = AccountTypeGameServer
 
 	case "A":
-		accountTypeNum = AccountTypeAnonGameServer
+		accountType = AccountTypeAnonGameServer
 
 	case "P":
-		accountTypeNum = AccountTypePending
+		accountType = AccountTypePending
 
 	case "C":
-		accountTypeNum = AccountTypeContentServer
+		accountType = AccountTypeContentServer
 
 	case "g":
-		accountTypeNum = AccountTypeClan
+		accountType = AccountTypeClan
 
 	case "c", "L", "T":
 		var accountInstance uint32
@@ -159,15 +163,13 @@ func ParseV3(steamID string) (SteamID, error) {
 			accountInstance = lobbyFlag
 		case "T":
 			accountInstance = matchmakingLobbyFlag
-		default:
-			return invalidSteamID, ErrInvalidSteamID
 		}
 
 		return FromValues(uint8(universe), accountInstance, AccountTypeChat, uint32(accountID)), nil
 	}
 
-	if accountTypeNum == 255 {
+	if accountType == 255 {
 		return invalidSteamID, ErrInvalidSteamID
 	}
-	return FromValues(uint8(universe), 0, accountTypeNum, uint32(accountID)), nil
+	return FromValues(uint8(universe), 0, accountType, uint32(accountID)), nil
 }

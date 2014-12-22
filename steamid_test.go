@@ -9,7 +9,7 @@ import (
 var steamIDTests = []struct {
 	Universe    uint8
 	Instance    uint32
-	Type        uint8
+	Type        steamid.AccountType
 	ID          uint32
 	ExpectedID2 string
 	ExpectedID3 string
@@ -69,14 +69,14 @@ func TestParseID2(t *testing.T) {
 			t.Errorf("Universe(%q): got %d, expected %d", details.ExpectedID2, u, details.Universe)
 		}
 
-		typ, _ := steamID.AccountType()
+		typ := steamID.AccountType()
 
 		if inst := steamID.AccountInstance(); inst != details.Instance &&
 			!(typ == steamid.AccountTypeIndividual && details.Instance != 1) { // Version 2 IDs can't carry instance information
 			t.Errorf("AccountInstance(%q): got %d, expected %d", details.ExpectedID2, inst, details.Instance)
 		}
 
-		if typ != int(details.Type) {
+		if typ != details.Type {
 			t.Errorf("AccountType(%q): got %d, expected %d", details.ExpectedID2, typ, details.Type)
 		}
 
@@ -102,13 +102,31 @@ func TestParseID3(t *testing.T) {
 			t.Errorf("AccountInstance(%q): got %d, expected %d", details.ExpectedID3, inst, details.Instance)
 		}
 
-		if typ, _ := steamID.AccountType(); typ != int(details.Type) {
+		if typ := steamID.AccountType(); typ != details.Type {
 			t.Errorf("AccountType(%q): got %d, expected %d", details.ExpectedID3, typ, details.Type)
 		}
 
 		if id := steamID.AccountID(); id != details.ID {
 			t.Errorf("AccountID(%q): got %d, expected %d", details.ExpectedID3, id, details.ID)
 		}
+	}
+}
+
+func TestCommunityID(t *testing.T) {
+	const (
+		communityID = 76561197960287930
+		expected2   = "STEAM_0:0:11101"
+		expected3   = "[U:0:22202]"
+	)
+
+	id := steamid.ParseCommunityID(communityID, steamid.AccountTypeIndividual)
+
+	if id2 := id.SteamID2(); id2 != expected2 {
+		t.Errorf("SteamID2(%d): got %s, expected %s", communityID, id2, expected2)
+	}
+
+	if id3 := id.SteamID3(); id3 != expected3 {
+		t.Errorf("SteamID3(%d): got %s, expected %s", communityID, id3, expected3)
 	}
 }
 

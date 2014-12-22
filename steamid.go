@@ -10,7 +10,7 @@ import (
 )
 
 // FromValues creates a SteamID from the given values.
-func FromValues(universe uint8, accountInstance uint32, accountType uint8, accountID uint32) SteamID {
+func FromValues(universe uint8, accountInstance uint32, accountType AccountType, accountID uint32) SteamID {
 	var id SteamID
 	id.setBits(0, 1<<32-1, uint64(accountID))
 	id.setBits(32, 1<<20-1, uint64(accountInstance))
@@ -56,18 +56,10 @@ func (id SteamID) AccountInstance() uint32 {
 	return uint32(id.getBits(32, 1<<20-1))
 }
 
-func (id SteamID) accountTypeNumber() uint8 {
-	return uint8(id.getBits(32+20, 1<<4-1))
-}
-
-// AccountType returns the account type number and name (if known). If the name
-// is not known, an empty string is returned instead.
-func (id SteamID) AccountType() (int, string) {
-	n := int(id.accountTypeNumber())
-	if n >= len(accountTypes) {
-		return n, ""
-	}
-	return n, accountTypes[n].Name
+// AccountType returns the account type of this SteamID. For more information
+// about account types, see the AccountType type.
+func (id SteamID) AccountType() AccountType {
+	return AccountType(id.getBits(32+20, 1<<4-1))
 }
 
 // SteamID2 returns the version 2 textual representation of this SteamID. For
@@ -76,15 +68,15 @@ func (id SteamID) AccountType() (int, string) {
 // When a SteamID type can not be turned into a version 2 ID, it returns an
 // empty string.
 func (id SteamID) SteamID2() string {
-	if accTypeNum := id.accountTypeNumber(); accTypeNum == AccountTypeInvalid {
+	if accType := id.AccountType(); accType == AccountTypeInvalid {
 		return "UNKNOWN"
-	} else if accTypeNum == AccountTypeIndividual {
+	} else if accType == AccountTypeIndividual {
 		accountID := id.AccountID()
 		if universe := id.Universe(); universe > UniversePublic {
 			return "STEAM_" + strconv.FormatInt(int64(id.Universe()), 10) + ":" + strconv.FormatInt(int64(accountID&1), 10) + ":" + strconv.FormatInt(int64(accountID>>1), 10)
 		}
 		return "STEAM_0:" + strconv.FormatInt(int64(accountID&1), 10) + ":" + strconv.FormatInt(int64(accountID>>1), 10)
-	} else if accTypeNum == AccountTypePending {
+	} else if accType == AccountTypePending {
 		return "STEAM_ID_PENDING"
 	}
 
@@ -97,7 +89,7 @@ func (id SteamID) SteamID2() string {
 // When a SteamID type can not be turned into a version 3 ID, it returns an
 // empty string.
 func (id SteamID) SteamID3() string {
-	switch id.accountTypeNumber() {
+	switch id.AccountType() {
 	case AccountTypeInvalid:
 		return "[I:" + strconv.FormatUint(uint64(id.Universe()), 10) + ":" + strconv.FormatUint(uint64(id.AccountID()), 10) + "]"
 	case AccountTypeIndividual:
@@ -167,7 +159,7 @@ func (id SteamID) MarshalText() (text []byte, err error) {
 		return []byte(version3), nil
 	}
 
-	return nil, fmt.Errorf("Cannot marshal account of type %d", id.accountTypeNumber())
+	return nil, fmt.Errorf("Cannot marshal account of type %d", id.AccountType())
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler

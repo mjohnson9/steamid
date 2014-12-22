@@ -1,65 +1,73 @@
 package steamid
 
-// accountType contains information about a given account type.
-type accountType struct {
-	Number uint8
-	Name   string
-
-	Modifier uint64
-}
-
-// A list of account types.
+// The list of known account types
 //
 // See
+// https://developer.valvesoftware.com/wiki/SteamID#Types_of_Steam_Accounts for
+// more information.
+const (
+	AccountTypeInvalid        AccountType = 0
+	AccountTypeIndividual     AccountType = 1
+	AccountTypeMultiseat      AccountType = 2
+	AccountTypeGameServer     AccountType = 3
+	AccountTypeAnonGameServer AccountType = 4
+	AccountTypePending        AccountType = 5
+	AccountTypeContentServer  AccountType = 6
+	AccountTypeClan           AccountType = 7
+	AccountTypeChat           AccountType = 8
+	AccountTypeP2PSuperSeeder AccountType = 9
+	AccountTypeAnonUser       AccountType = 10
+)
+
+// AccountType represents a Steam account type.
+//
+// For more information about account types, see
 // https://developer.valvesoftware.com/wiki/SteamID#Types_of_Steam_Accounts
-// for more information.
-var accountTypes = []*accountType{
-	&accountType{
-		Number: 0,
-		Name:   "Invalid",
-	},
-	&accountType{
-		Number: 1,
-		Name:   "Individual",
+type AccountType uint8
 
-		Modifier: 0x0110000100000000,
-	},
-	&accountType{
-		Number: 2,
-		Name:   "Multiseat",
-	},
-	&accountType{
-		Number: 3,
-		Name:   "GameServer",
-	},
-	&accountType{
-		Number: 4,
-		Name:   "AnonGameServer",
-	},
-	&accountType{
-		Number: 5,
-		Name:   "Pending",
-	},
-	&accountType{
-		Number: 6,
-		Name:   "ContentServer",
-	},
-	&accountType{
-		Number: 7,
-		Name:   "Clan",
+// Modifier returns the account type's modifier. If the account type does not
+// have a modifier, it returns 0.
+//
+// Currently the only account types with modifiers are AccountTypeIndividual and
+// AccountTypeClan.
+func (a AccountType) Modifier() uint64 {
+	switch a {
+	case AccountTypeIndividual:
+		return 0x0110000100000000
+	case AccountTypeClan:
+		return 0x0170000000000000
+	default:
+		return 0
+	}
+}
 
-		Modifier: 0x0170000000000000,
-	},
-	&accountType{
-		Number: 8,
-		Name:   "Chat",
-	},
-	&accountType{
-		Number: 9,
-		Name:   "P2P SuperSeeder",
-	},
-	&accountType{
-		Number: 10,
-		Name:   "AnonUser",
-	},
+// String gives the name of this account type. If the name of this account type
+// isn't known, it returns an empty string.
+func (a AccountType) String() string {
+	switch a {
+	case AccountTypeInvalid:
+		return "Invalid"
+	case AccountTypeIndividual:
+		return "Individual"
+	case AccountTypeMultiseat:
+		return "Multiseat"
+	case AccountTypeGameServer:
+		return "GameServer"
+	case AccountTypeAnonGameServer:
+		return "AnonGameServer"
+	case AccountTypePending:
+		return "Pending"
+	case AccountTypeContentServer:
+		return "ContentServer"
+	case AccountTypeClan:
+		return "Clan"
+	case AccountTypeChat:
+		return "Chat"
+	case AccountTypeP2PSuperSeeder:
+		return "P2P SuperSeeder"
+	case AccountTypeAnonUser:
+		return "AnonUser"
+	default:
+		return ""
+	}
 }
