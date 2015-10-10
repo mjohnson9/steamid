@@ -1,4 +1,4 @@
-// Package steamid implements helpers for handling SteamIDs.
+// package steamid provides utilities for handling and manipulating SteamIDs
 //
 // The implementation is based on and compliant with the details from
 // https://developer.valvesoftware.com/wiki/SteamID.
