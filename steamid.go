@@ -4,10 +4,7 @@
 // https://developer.valvesoftware.com/wiki/SteamID.
 package steamid
 
-import (
-	"fmt"
-	"strconv"
-)
+import "strconv"
 
 // FromValues creates a SteamID from the given values.
 func FromValues(universe uint8, accountInstance uint32, accountType AccountType, accountID uint32) SteamID {
@@ -149,6 +146,14 @@ func (id SteamID) String() string {
 
 // Implementation of encoding.TextMarshaler & encoding.TextUnmarshaler
 
+type marshalError struct {
+	accountType AccountType
+}
+
+func (m *marshalError) Error() string {
+	return "Cannot marshal account of type " + m.accountType.String()
+}
+
 // MarshalText implements encoding.TextMarshaler
 func (id SteamID) MarshalText() (text []byte, err error) {
 	if version2 := id.SteamID2(); len(version2) > 0 {
@@ -159,7 +164,7 @@ func (id SteamID) MarshalText() (text []byte, err error) {
 		return []byte(version3), nil
 	}
 
-	return nil, fmt.Errorf("Cannot marshal account of type %d", id.AccountType())
+	return nil, &marshalError{id.AccountType()}
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler
